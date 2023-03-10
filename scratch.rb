@@ -1,44 +1,16 @@
-module Paintable
-  def spray_paint(new_color)
-    self.color = new_color
+class Animal
+  attr_accessor :name
+
+  def initialize(name)
+    @name = name
   end
 end
 
-class MyCar
-  include Paintable
-
-  attr_accessor :color, :speed
-  attr_reader :year
-
-  def initialize(year, color, model)
-    @year = year
+class GoodDog < Animal
+  def initialize(name, color)
+    super(name)
     @color = color
-    @model = model
-    @speed = 0
-  end
-
-  def accelerate
-    self.speed += 5
-  end
-  
-  def brake
-    self.speed -= [3, self.speed - 0].min
-  end
-  
-  def turn_off
-    self.speed = 0
   end
 end
 
-fiata = MyCar.new(2018, "black", "124 Spider")
-p fiata.year
-p fiata.color
-fiata.spray_paint("red")
-p fiata.color
-p fiata.speed
-fiata.accelerate
-p fiata.speed
-fiata.brake
-p fiata.speed
-fiata.turn_off
-p fiata.speed
+p bruno = GoodDog.new("charlie", "brown") # => #<GoodDog:0x007fb40b1e6718 @color="brown", @name="brown">

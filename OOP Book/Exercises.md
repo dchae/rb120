@@ -75,3 +75,86 @@ p fiata.color #=> "black"
 fiata.spray_paint("red")
 p fiata.color #=> "red"
 ```
+
+Add a class method to your MyCar class that calculates the gas mileage of any car.
+
+Override the to_s method to create a user friendly print out of your object.
+
+```rb
+module Paintable
+  def spray_paint(new_color)
+    self.color = new_color
+  end
+end
+
+class MyCar
+  include Paintable
+
+  attr_accessor :color, :speed
+  attr_reader :year
+
+  def self.mpg(miles, gallons)
+    miles / gallons.to_f
+  end
+
+  def initialize(year, color, model)
+    @year = year
+    @color = color
+    @model = model
+    @speed = 0
+  end
+
+  def accelerate
+    self.speed += 5
+  end
+
+  def brake
+    self.speed -= [3, self.speed - 0].min
+  end
+
+  def turn_off
+    self.speed = 0
+  end
+
+  def to_s
+    "#{color.capitalize} #{year} #{@model}; Speed: #{speed}"
+  end
+end
+p MyCar.mpg(350, 10)
+
+fiata = MyCar.new(2018, "black", "124 Spider")
+p fiata.year
+p fiata.color
+fiata.spray_paint("red")
+p fiata.color
+p fiata.speed
+fiata.accelerate
+p fiata.speed
+fiata.brake
+p fiata.speed
+fiata.turn_off
+p fiata.speed
+puts fiata
+
+```
+
+When running the following code...
+```rb
+class Person
+  attr_reader :name
+  def initialize(name)
+    @name = name
+  end
+end
+
+bob = Person.new("Steve")
+bob.name = "Bob"
+```
+We get the following error...
+```
+test.rb:9:in `<main>': undefined method `name=' for
+  #<Person:0x007fef41838a28 @name="Steve"> (NoMethodError)
+```
+
+We get this error because this class has no setter method. 
+We can fix it by defining a setter method manually, or by changing `attr_reader` to `attr_accessor`.
