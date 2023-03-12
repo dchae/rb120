@@ -1,16 +1,15 @@
-class Animal
-  attr_accessor :name
+class Student
+  attr_accessor :name, :grade
 
   def initialize(name)
     @name = name
+    @grade = nil
+  end
+  def change_grade(new_grade)
+    grade = new_grade
   end
 end
 
-class GoodDog < Animal
-  def initialize(name, color)
-    super(name)
-    @color = color
-  end
-end
-
-p bruno = GoodDog.new("charlie", "brown") # => #<GoodDog:0x007fb40b1e6718 @color="brown", @name="brown">
+priya = Student.new("Priya")
+priya.change_grade("A")
+p priya.grade # => "A"
