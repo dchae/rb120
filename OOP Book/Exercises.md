@@ -158,3 +158,4 @@ test.rb:9:in `<main>': undefined method `name=' for
 
 We get this error because this class has no setter method. 
 We can fix it by defining a setter method manually, or by changing `attr_reader` to `attr_accessor`.
+
