@@ -141,7 +141,7 @@ Style/ParenthesesAroundCondition:
 
 Style/PercentLiteralDelimiters:
   Description: "Use `%`-literal delimiters consistently"
-  Enabled: true
+  Enabled: false
   PreferredDelimiters:
     "%": ()
     "%i": ()
