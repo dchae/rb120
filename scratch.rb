@@ -1,15 +1,27 @@
-class Student
-  attr_accessor :name, :grade
-
-  def initialize(name)
-    @name = name
-    @grade = nil
-  end
-  def change_grade(new_grade)
-    grade = new_grade
+class FarmAnimal
+  def speak
+    "#{self.class} says "
   end
 end
 
-priya = Student.new("Priya")
-priya.change_grade("A")
-p priya.grade # => "A"
+class Sheep < FarmAnimal
+  def speak
+    super + "baa!"
+  end
+end
+
+class Lamb < Sheep
+  def speak
+    super + "baaaaaaa!"
+  end
+end
+
+class Cow < FarmAnimal
+  def speak
+    super + "mooooooo!"
+  end
+end
+
+p Sheep.new.speak # => "Sheep says baa!"
+p Lamb.new.speak # => "Lamb says baa!baaaaaaa!"
+p Cow.new.speak # => "Cow says mooooooo!"

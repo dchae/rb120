@@ -105,12 +105,13 @@ class Computer < Player
         [0.1, 0.15, 0.05, 0.4, 0.3],
         [0.05, 0.05, 0.05, 0.05, 0.8],
       ],
-    )
+    ).to_h
 
   def initialize
-    p "here"
     super
-    @weighted_moves = Move::VALUES.keys.zip(WEIGHTS[self.name]).to_h
+    moves = Move::VALUES.keys
+    zipped_moves_and_weights = moves.zip(WEIGHTS[self.name])
+    @weighted_moves = zipped_moves_and_weights.to_h
   end
 
   def set_name
@@ -177,12 +178,17 @@ class RPSGame
   end
 
   def display_move_history
+    puts "Move History:"
     human
       .move_history
       .zip(computer.move_history)
-      .each do |human_move, computer_move|
-        puts "#{human.name}'s move: #{human_move}, #{computer.name}'s move: #{computer_move}."
+      .each_with_index do |(human_move, computer_move), i|
+        puts "Round #{i + 1}: #{human.name} played #{human_move}, #{computer.name} played #{computer_move}."
       end
+  end
+
+  def display_opponent
+    puts "Your opponent is #{computer.name}."
   end
 
   def display_score
@@ -192,6 +198,7 @@ class RPSGame
 
   def play
     display_welcome_message
+    display_opponent
     loop do
       human.choose
       computer.choose
