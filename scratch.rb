@@ -1,27 +1,27 @@
-class FarmAnimal
-  def speak
-    "#{self.class} says "
+module Describable
+  def describe_shape
+    "I am a #{self.class} and have #{self.class::SIDES} sides."
   end
 end
 
-class Sheep < FarmAnimal
-  def speak
-    super + "baa!"
+class Shape
+  include Describable
+
+  def self.sides
+    self::SIDES
   end
 end
 
-class Lamb < Sheep
-  def speak
-    super + "baaaaaaa!"
+class Quadrilateral < Shape
+  SIDES = 4
+  def sides
+    SIDES
   end
 end
 
-class Cow < FarmAnimal
-  def speak
-    super + "mooooooo!"
-  end
+class Square < Quadrilateral
 end
 
-p Sheep.new.speak # => "Sheep says baa!"
-p Lamb.new.speak # => "Lamb says baa!baaaaaaa!"
-p Cow.new.speak # => "Cow says mooooooo!"
+p Square.sides # => 4
+p Square.new.sides # => 4
+p Square.new.describe_shape # => "I am a Square and have 4 sides."
