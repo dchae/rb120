@@ -1,10 +1,21 @@
-class WheeledVehicle
-  attr_accessor :speed, :heading
+module Fuelable
+  def range
+    @fuel_capacity * @fuel_efficiency
+  end
+end
 
-  def initialize(tire_array, km_traveled_per_liter, liters_of_fuel_capacity)
-    @tires = tire_array
+class PoweredVehicle
+  include Fuelable
+  attr_accessor :speed, :heading
+  def initialize(km_traveled_per_liter, liters_of_fuel_capacity)
     @fuel_efficiency = km_traveled_per_liter
     @fuel_capacity = liters_of_fuel_capacity
+  end
+end
+class WheeledVehicle < PoweredVehicle
+  def initialize(tire_array, km_traveled_per_liter, liters_of_fuel_capacity)
+    @tires = tire_array
+    super(km_traveled_per_liter, liters_of_fuel_capacity)
   end
 
   def tire_pressure(tire_index)
@@ -13,10 +24,6 @@ class WheeledVehicle
 
   def inflate_tire(tire_index, pressure)
     @tires[tire_index] = pressure
-  end
-
-  def range
-    @fuel_capacity * @fuel_efficiency
   end
 end
 
@@ -34,9 +41,8 @@ class Motorcycle < WheeledVehicle
   end
 end
 
-class Catamaran
+class Catamaran < PoweredVehicle
   attr_reader :propeller_count, :hull_count
-  attr_accessor :speed, :heading
 
   def initialize(
     num_propellers,
@@ -44,6 +50,19 @@ class Catamaran
     km_traveled_per_liter,
     liters_of_fuel_capacity
   )
-    # ... code omitted ...
+    @propeller_count = num_propellers
+    @hull_count = num_hulls
+    super(km_traveled_per_liter, liters_of_fuel_capacity)
   end
 end
+
+car = Auto.new
+p car
+p car.tire_pressure(0)
+car.inflate_tire(1, 100)
+p car
+p car.range
+
+cat = Catamaran.new(2, 2, 18, 80)
+p cat
+p cat.range
