@@ -4,6 +4,10 @@ class Board
   WINNING_LINES =
     [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
       [[1, 5, 9], [3, 5, 7]]
+  CELL_WIDTH = 7
+  CELL_HEIGHT = 3
+  HORIZONTAL_SEPARATOR = "#{["-" * CELL_WIDTH] * 3 * "+"}\n"
+  HORIZONTAL_SPACER = "#{[" " * CELL_WIDTH] * 3 * "|"}\n"
 
   attr_reader :squares
 
@@ -15,11 +19,7 @@ class Board
     squares.each { |k, _| squares[k] = Square.new }
   end
 
-  def get_square_at(key)
-    squares[key]
-  end
-
-  def set_square_at(key, marker)
+  def []=(key, marker)
     squares[key].marker = marker
   end
 
@@ -32,17 +32,35 @@ class Board
   end
 
   def someone_won?
-    !!detect_winner
+    !!winning_marker
   end
 
-  def detect_winner
+  def winning_line?(squares_in_line)
+    marked_squares = squares_in_line.reject { |x| x.unmarked? }
+    marked_squares.size == 3 &&
+      marked_squares.map { |x| x.marker }.uniq.size == 1
+  end
+
+  def winning_marker
     # returns winning marker or nil
     WINNING_LINES.each do |line|
-      [TTTGame::HUMAN_MARKER, TTTGame::COMPUTER_MARKER].each do |marker|
-        return marker if line.map { |i| squares[i].marker }.all?(marker)
-      end
+      squares_in_line = line.map { |i| squares[i] }
+      return squares_in_line.first.marker if winning_line?(squares_in_line)
     end
     nil
+  end
+
+  def draw
+    board_string =
+      (0..2)
+        .map do |row|
+          HORIZONTAL_SPACER * (CELL_HEIGHT / 2) +
+            (0..2)
+              .map { |col| squares[row * 3 + col + 1].to_s.center(CELL_WIDTH) }
+              .join("|") + "\n" + HORIZONTAL_SPACER * (CELL_HEIGHT / 2)
+        end
+        .join(HORIZONTAL_SEPARATOR)
+    puts board_string
   end
 end
 
@@ -75,10 +93,6 @@ end
 class TTTGame
   HUMAN_MARKER = "X"
   COMPUTER_MARKER = "O"
-  CELL_WIDTH = 7
-  CELL_HEIGHT = 3
-  HORIZONTAL_SEPARATOR = "#{["-" * CELL_WIDTH] * 3 * "+"}\n"
-  HORIZONTAL_SPACER = "#{[" " * CELL_WIDTH] * 3 * "|"}\n"
 
   attr_reader :board, :human, :computer
 
@@ -97,22 +111,16 @@ class TTTGame
     puts "Thanks for playing Tic Tac Toe! Goodbye!"
   end
 
-  def display_board(clear = true)
-    system "clear" if clear
+  def display_board
     puts "You're a #{human.marker}. Computer is a #{computer.marker}."
     puts
-    board_string =
-      (0..2)
-        .map do |row|
-          HORIZONTAL_SPACER * (CELL_HEIGHT / 2) +
-            (0..2)
-              .map do |col|
-                board.get_square_at(row * 3 + col + 1).to_s.center(CELL_WIDTH)
-              end
-              .join("|") + "\n" + HORIZONTAL_SPACER * (CELL_HEIGHT / 2)
-        end
-        .join(HORIZONTAL_SEPARATOR)
-    puts board_string + "\n"
+    board.draw
+    puts
+  end
+
+  def clear_screen_and_display_board
+    clear
+    display_board
   end
 
   def human_moves
@@ -123,17 +131,21 @@ class TTTGame
       break if board.unmarked_keys.include?(square)
       puts "Sorry, that's not a valid choice."
     end
-    board.set_square_at(square, human.marker)
+    board[square] = human.marker
   end
 
   def computer_moves
-    board.set_square_at(board.unmarked_keys.sample, computer.marker)
+    board[board.unmarked_keys.sample] = computer.marker
+  end
+
+  def clear
+    system "clear"
   end
 
   def display_result
-    display_board
+    clear_screen_and_display_board
 
-    case board.detect_winner
+    case board.winning_marker
     when human.marker
       puts "You won!"
     when computer.marker
@@ -154,12 +166,19 @@ class TTTGame
     answer == "y"
   end
 
+  def reset
+    board.reset
+    clear
+    puts "Let's play again!"
+    puts
+  end
+
   def play
-    system "clear"
+    clear
     display_welcome_message
 
     loop do
-      display_board(false)
+      display_board
 
       loop do
         human_moves
@@ -167,14 +186,11 @@ class TTTGame
 
         computer_moves
         break if board.someone_won? || board.full?
-        display_board
+        clear_screen_and_display_board
       end
       display_result
       break unless play_again?
-      board.reset
-      system "clear"
-      puts "Let's play again!"
-      puts
+      reset
     end
 
     display_goodbye_message
