@@ -1,13 +1,12 @@
-require "pry"
-
 class Board
   WINNING_LINES =
-    [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
-      [[1, 5, 9], [3, 5, 7]]
+    [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
+    [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
+    [[1, 5, 9], [3, 5, 7]]
   CELL_WIDTH = 7
   CELL_HEIGHT = 3
-  HORIZONTAL_SEPARATOR = "#{["-" * CELL_WIDTH] * 3 * "+"}\n"
-  HORIZONTAL_SPACER = "#{[" " * CELL_WIDTH] * 3 * "|"}\n"
+  HZ_LINE = "#{['-' * CELL_WIDTH] * 3 * '+'}\n"
+  HZ_SPACE = "#{[' ' * CELL_WIDTH] * 3 * '|'}\n"
 
   attr_reader :squares
 
@@ -35,32 +34,34 @@ class Board
     !!winning_marker
   end
 
-  def winning_line?(squares_in_line)
-    marked_squares = squares_in_line.reject { |x| x.unmarked? }
-    marked_squares.size == 3 &&
-      marked_squares.map { |x| x.marker }.uniq.size == 1
-  end
-
   def winning_marker
     # returns winning marker or nil
     WINNING_LINES.each do |line|
-      squares_in_line = line.map { |i| squares[i] }
+      squares_in_line = squares.values_at(*line)
       return squares_in_line.first.marker if winning_line?(squares_in_line)
     end
     nil
   end
 
-  def draw
-    board_string =
-      (0..2)
-        .map do |row|
-          HORIZONTAL_SPACER * (CELL_HEIGHT / 2) +
-            (0..2)
-              .map { |col| squares[row * 3 + col + 1].to_s.center(CELL_WIDTH) }
-              .join("|") + "\n" + HORIZONTAL_SPACER * (CELL_HEIGHT / 2)
-        end
-        .join(HORIZONTAL_SEPARATOR)
-    puts board_string
+  def to_s
+    hz_space = HZ_SPACE * (CELL_HEIGHT / 2)
+
+    (0..2)
+      .map do |i|
+        mid =
+          (0..2)
+          .map { |j| squares[i * 3 + j + 1].to_s.center(CELL_WIDTH) }
+          .join("|") + "\n"
+        hz_space + mid + hz_space
+      end
+      .join(HZ_LINE)
+  end
+
+  private
+
+  def winning_line?(squares_in_line)
+    marked_squares = squares_in_line.reject(&:unmarked?)
+    marked_squares.size == 3 && marked_squares.map(&:marker).uniq.size == 1
   end
 end
 
@@ -73,36 +74,102 @@ class Square
     @marker = marker
   end
 
-  def to_s
-    marker
-  end
-
   def unmarked?
     marker == INITIAL_MARKER
+  end
+
+  def to_s
+    marker
   end
 end
 
 class Player
-  attr_reader :marker
+  attr_reader :marker, :name
 
-  def initialize(marker)
+  @@count = 1
+
+  def initialize(marker, name="Player #{@@count}")
     @marker = marker
+    @name = name
+    @@count += 1
   end
 end
 
 class TTTGame
-  HUMAN_MARKER = "X"
-  COMPUTER_MARKER = "O"
+  # HUMAN_MARKER = "X"
+  # COMPUTER_MARKER = "O"
 
   attr_reader :board, :human, :computer
 
   def initialize
     @board = Board.new
-    @human = Player.new(HUMAN_MARKER)
-    @computer = Player.new(COMPUTER_MARKER)
+    @human = Player.new(human_marker, human_name)
+    @computer = Player.new(computer_marker, computer_name)
+  end
+
+  def play
+    clear
+    display_welcome_message
+    main_loop
+    display_goodbye_message
+  end
+
+  private
+
+  def human_marker
+    marker = nil
+    loop do
+      puts "Pick a marker (1 char):"
+      marker = gets.chomp
+      break if marker.size == 1
+    end
+    marker
+  end
+
+  def computer_marker
+    human.marker == "O" ? "X" : "O"
+  end
+
+  def human_name
+    name = nil
+    loop do
+      puts "What is your name?"
+      name = gets.chomp
+      break unless name.empty?
+    end
+    name
+  end
+
+  def computer_name
+    %W[C-3PO HAL GPT-4 Wall-E Ava TARS].sample
+  end
+
+  def player_move
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+      clear_screen_and_display_board if human_turn?
+    end
+  end
+
+  def main_loop
+    loop do
+      display_board
+      player_move
+
+      display_result
+      break unless play_again?
+      reset
+      display_play_again_message
+    end
+  end
+
+  def greet_player
+    puts "Hello, #{human.name}! Your opponent is #{computer.name}."
   end
 
   def display_welcome_message
+    greet_player
     puts "Welcome to Tic Tac Toe!"
     puts
   end
@@ -111,11 +178,20 @@ class TTTGame
     puts "Thanks for playing Tic Tac Toe! Goodbye!"
   end
 
+  def display_play_again_message
+    puts "Let's play again!"
+    puts
+  end
+
   def display_board
-    puts "You're a #{human.marker}. Computer is a #{computer.marker}."
+    puts "You're a #{human.marker}. #{computer.name} is a #{computer.marker}."
     puts
-    board.draw
+    puts board
     puts
+  end
+
+  def clear
+    system "clear"
   end
 
   def clear_screen_and_display_board
@@ -123,8 +199,21 @@ class TTTGame
     display_board
   end
 
+  def display_result
+    clear_screen_and_display_board
+
+    case board.winning_marker
+    when human.marker
+      puts "#{human.name} won!"
+    when computer.marker
+      puts "#{computer.name} won!"
+    else
+      puts "It's a tie!"
+    end
+  end
+
   def human_moves
-    puts "Choose a square: #{board.unmarked_keys.join(", ")}:"
+    puts "Choose a square: #{board.unmarked_keys.join(', ')}:"
     square = nil
     loop do
       square = gets.chomp.to_i
@@ -136,23 +225,6 @@ class TTTGame
 
   def computer_moves
     board[board.unmarked_keys.sample] = computer.marker
-  end
-
-  def clear
-    system "clear"
-  end
-
-  def display_result
-    clear_screen_and_display_board
-
-    case board.winning_marker
-    when human.marker
-      puts "You won!"
-    when computer.marker
-      puts "Computer won!"
-    else
-      puts "It's a tie!"
-    end
   end
 
   def play_again?
@@ -169,31 +241,15 @@ class TTTGame
   def reset
     board.reset
     clear
-    puts "Let's play again!"
-    puts
   end
 
-  def play
-    clear
-    display_welcome_message
+  def human_turn?
+    number_of_moves_made = board.squares.count { |_, square| !square.unmarked? }
+    number_of_moves_made.even?
+  end
 
-    loop do
-      display_board
-
-      loop do
-        human_moves
-        break if board.someone_won? || board.full?
-
-        computer_moves
-        break if board.someone_won? || board.full?
-        clear_screen_and_display_board
-      end
-      display_result
-      break unless play_again?
-      reset
-    end
-
-    display_goodbye_message
+  def current_player_moves
+    human_turn? ? human_moves : computer_moves
   end
 end
 
