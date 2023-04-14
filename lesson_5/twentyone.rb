@@ -1,23 +1,35 @@
 require "pry"
 
 class Player
-  attr_reader
+  attr_reader :name, :cards
 
   def initialize(name)
     @name = name
-  end
-
-  def hit
-  end
-
-  def stay
+    @cards = []
   end
 
   def busted?
+    total > 21
   end
 
   def total
-    cards
+    total = cards.sum(&:value)
+    cards.count(&:ace?).times { |_| total += 10 if total < 21 }
+    total
+  end
+
+  def add_to_hand(card)
+    cards << card
+  end
+
+  def display_hand(hidden_cards: 0)
+    puts cards
+           .size
+           .times
+           .map { |i|
+             i < (cards.size - hidden_cards) ? cards[i].to_s : "[HIDDEN CARD]"
+           }
+           .join(", ")
   end
 end
 
@@ -36,19 +48,35 @@ class Deck
         .flatten
   end
 
-  def deal(new_owner)
-    cards.reject(&:owner).sample.owner = new_owner
+  def draw_card
+    cards.delete_at(rand(cards.size))
+  end
+
+  def deal_to(player)
+    player.add_to_hand(draw_card)
   end
 end
 
 class Card
-  attr_reader :value, :suit
-  attr_accessor :owner
+  RANKS = %W[Ace Two Three Four Five Six Seven Eight Nine Ten Jack Queen King]
+  attr_reader :rank, :suit
 
-  def initialize(value, suit)
-    @value = value
+  def initialize(rank, suit)
+    @rank = rank
     @suit = suit
-    @owner = nil
+    @value = value
+  end
+
+  def ace?
+    rank == 1
+  end
+
+  def value
+    [rank, 10].min
+  end
+
+  def to_s
+    "#{RANKS[rank - 1]} of #{suit}"
   end
 end
 
@@ -59,6 +87,23 @@ class Game
     @deck = Deck.new
     @dealer = Dealer.new
     @player = Player.new(get_player_name)
+  end
+
+  def start
+    greet_player
+    initial_deal
+    show_cards
+    player_turn
+    dealer_turn if !player.busted?
+    show_result
+    # binding.pry
+  end
+
+  private
+
+  def greet_player
+    puts "Hello, #{player.name}. Welcome to Twenty-One!"
+    puts
   end
 
   def get_player_name
@@ -73,16 +118,64 @@ class Game
   end
 
   def initial_deal
-    [player, dealer].each { |new_owner| 2.times { |_| deck.deal(new_owner) }}
+    [player, dealer].each do |new_owner|
+      2.times { |_| deck.deal_to(new_owner) }
+    end
   end
 
-  def start
-    initial_deal
-    binding.pry
-    # show_initial_cards
-    # player_turn
-    # dealer_turn
-    # show_result
+  def show_cards(player_turn: true)
+    puts "#{dealer.name}'s hand: "
+    dealer.display_hand(hidden_cards: player_turn ? 1 : 0)
+    puts "Value: #{player_turn ? "HIDDEN" : dealer.total}"
+    puts "#{player.name}'s hand: "
+    player.display_hand
+    puts "Value: #{player.total}\n\n"
+  end
+
+  def player_turn
+    loop do
+      choice = nil
+      loop do
+        puts "Would you like to hit or stay? (h/s)"
+        choice = gets.chomp.downcase
+        break if choice =~ /[hs]{1}/
+        puts "Not a valid choice."
+      end
+
+      if choice == "s"
+        puts "You chose to stay."
+        break
+      end
+
+      puts "You chose to hit."
+      deck.deal_to(player)
+      puts "You drew the #{player.cards.last}"
+      puts
+      break if player.busted?
+      show_cards
+    end
+  end
+
+  def dealer_turn
+    puts
+    while !dealer.busted? && dealer.total < 17
+      deck.deal_to(dealer)
+      puts "#{dealer.name} drew the #{dealer.cards.last}"
+    end
+  end
+
+  def show_result
+    puts
+    show_cards(player_turn: false)
+    if player.busted?
+      puts "#{player.name} busted! #{dealer.name} wins."
+    elsif dealer.busted?
+      puts "#{dealer.name} busted. #{player.name} wins!"
+    elsif player.total > dealer.total
+      puts "#{player.name} wins!"
+    else
+      puts "#{dealer.name} wins."
+    end
   end
 end
 
