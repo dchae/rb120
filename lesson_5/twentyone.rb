@@ -1,5 +1,3 @@
-require "pry"
-
 class Player
   attr_reader :name, :cards
 
@@ -14,7 +12,7 @@ class Player
 
   def total
     total = cards.sum(&:value)
-    cards.count(&:ace?).times { |_| total += 10 if total < 21 }
+    cards.count(&:ace?).times { |_| total += 10 if total < 11 }
     total
   end
 
@@ -23,13 +21,15 @@ class Player
   end
 
   def display_hand(hidden_cards: 0)
-    puts cards
-           .size
-           .times
-           .map { |i|
-             i < (cards.size - hidden_cards) ? cards[i].to_s : "[HIDDEN CARD]"
-           }
-           .join(", ")
+    hand =
+      cards
+        .size
+        .times
+        .map do |i|
+          i < (cards.size - hidden_cards) ? cards[i].to_s : "[HIDDEN CARD]"
+        end
+        .join(", ")
+    puts hand
   end
 end
 
@@ -42,10 +42,7 @@ end
 class Deck
   attr_reader :cards
   def initialize
-    @cards =
-      %W[Clubs Diamonds Hearts Spades]
-        .map { |suit| (1..13).map { |val| Card.new(val, suit) } }
-        .flatten
+    @cards = 52.times.map { |ord| Card.new(ord) }.flatten
   end
 
   def draw_card
@@ -58,13 +55,15 @@ class Deck
 end
 
 class Card
+  SUITS = %W[Clubs Diamonds Hearts Spades]
   RANKS = %W[Ace Two Three Four Five Six Seven Eight Nine Ten Jack Queen King]
   attr_reader :rank, :suit
 
-  def initialize(rank, suit)
-    @rank = rank
-    @suit = suit
-    @value = value
+  def initialize(ord)
+    raise InputError if !(0..52).include?(ord)
+    @rank = ord % 13 + 1
+    @suit = ord / 13 + 1
+    @value = value + 1
   end
 
   def ace?
@@ -76,7 +75,7 @@ class Card
   end
 
   def to_s
-    "#{RANKS[rank - 1]} of #{suit}"
+    "#{RANKS[rank - 1]} of #{SUITS[suit - 1]}"
   end
 end
 
@@ -173,8 +172,10 @@ class Game
       puts "#{dealer.name} busted. #{player.name} wins!"
     elsif player.total > dealer.total
       puts "#{player.name} wins!"
+    elsif player.total < dealer.total
+      puts "#{dealer.name} wins!"
     else
-      puts "#{dealer.name} wins."
+      puts "It's a tie!"
     end
   end
 end
