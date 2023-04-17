@@ -47,10 +47,6 @@ class Deck
   attr_reader :cards
 
   def initialize
-    reset_cards
-  end
-
-  def reset_cards
     @cards = Card::NUMBERS.map { |x| Card.new(x) }.flatten
   end
 
@@ -68,7 +64,7 @@ class Deck
 end
 
 class Card
-  NUMBERS = (0..52)
+  NUMBERS = (0...52)
   SUITS = %w[Clubs Diamonds Hearts Spades]
   RANKS = %w[Ace Two Three Four Five Six Seven Eight Nine Ten Jack Queen King]
   attr_reader :rank, :suit
@@ -78,21 +74,21 @@ class Card
       raise(ArgumentError,
             "expected card number within range (0..52)")
     end
-    @rank = ord % 13 + 1
-    @suit = ord / 13 + 1
-    @value = value + 1
+    @suit = ord / 13
+    @rank = ord % 13
+    @value = value
   end
 
   def ace?
-    rank == 1
+    rank == 0
   end
 
   def value
-    [rank, 10].min
+    [rank + 1, 10].min
   end
 
   def to_s
-    "#{RANKS[rank - 1]} of #{SUITS[suit - 1]}"
+    "#{RANKS[rank]} of #{SUITS[suit]}"
   end
 end
 
@@ -113,6 +109,11 @@ class Game
   end
 
   private
+
+  def prompt(str)
+    puts "=> #{str}"
+    nil
+  end
 
   def game_loop
     loop do
@@ -147,7 +148,7 @@ class Game
   def player_name
     name = nil
     loop do
-      puts "What's your name?"
+      prompt "What's your name?"
       name = gets.chomp
       break if name =~ /[^\s]/
       puts "Not a valid name."
@@ -161,10 +162,10 @@ class Game
     end
   end
 
-  def show_cards(player_turn: true)
+  def show_cards(is_player_turn: true)
     puts "#{dealer.name}'s hand: "
-    dealer.display_hand(hidden_cards: player_turn ? 1 : 0)
-    puts "Value: #{player_turn ? 'HIDDEN' : dealer.total}"
+    dealer.display_hand(hidden_cards: is_player_turn ? 1 : 0)
+    puts "Value: #{is_player_turn ? 'HIDDEN' : dealer.total}"
     puts "#{player.name}'s hand: "
     player.display_hand
     puts "Value: #{player.total}\n\n"
@@ -172,7 +173,7 @@ class Game
 
   def player_choice
     loop do
-      puts "Would you like to hit or stay? (h/s)"
+      prompt "Would you like to hit or stay? (h/s)"
       choice = gets.chomp.downcase
       return choice if choice =~ /^[hs]$/
       puts "Not a valid choice."
@@ -205,7 +206,7 @@ class Game
 
   def show_result
     puts
-    show_cards(player_turn: false)
+    show_cards(is_player_turn: false)
     show_winner
   end
 
@@ -229,7 +230,7 @@ class Game
   def play_again?
     choice = nil
     loop do
-      puts "Would you like to play again? (y/n)"
+      prompt "Would you like to play again? (y/n)"
       choice = gets.chomp.downcase
       break if choice =~ /^[yn]$/
       puts "Not a valid choice"
@@ -238,7 +239,7 @@ class Game
   end
 
   def reset_game
-    deck.reset_cards
+    @deck = Deck.new
     [player, dealer].each(&:reset_cards)
     clear_screen
   end
