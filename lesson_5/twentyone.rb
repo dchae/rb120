@@ -207,12 +207,16 @@ class Game
 
   def dealer_turn
     puts "\nDealer's turn..."
+    dealer_loop
+    puts(dealer.busted? ? "#{dealer.name} busted!" : "Dealer stays!")
+  end
+
+  def dealer_loop
     while dealer.total < 17
       player_continue
       deck.deal_to(dealer)
       puts "#{dealer.name} drew the #{dealer.cards.last}"
     end
-    puts (dealer.busted? ? "#{dealer.name} busted!" : "Dealer stays!")
   end
 
   def show_result
