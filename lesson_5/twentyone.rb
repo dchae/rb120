@@ -132,6 +132,11 @@ class Game
     system "clear"
   end
 
+  def player_continue
+    prompt "Press enter to continue.."
+    gets
+  end
+
   def greet_player
     puts "Hello, #{player.name}. Welcome to Twenty-One!"
   end
@@ -202,20 +207,12 @@ class Game
 
   def dealer_turn
     puts "\nDealer's turn..."
-    dealer_loop
-    puts "Dealer stays!"
-  end
-
-  def dealer_loop
     while dealer.total < 17
-      if dealer.busted?
-        puts "#{dealer.name} busted!"
-        return
-      end
-
+      player_continue
       deck.deal_to(dealer)
       puts "#{dealer.name} drew the #{dealer.cards.last}"
     end
+    puts (dealer.busted? ? "#{dealer.name} busted!" : "Dealer stays!")
   end
 
   def show_result
