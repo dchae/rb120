@@ -134,7 +134,6 @@ class Game
 
   def greet_player
     puts "Hello, #{player.name}. Welcome to Twenty-One!"
-    puts
   end
 
   def goodbye_message
@@ -163,6 +162,7 @@ class Game
   end
 
   def show_cards(is_player_turn: true)
+    puts
     puts "#{dealer.name}'s hand: "
     dealer.display_hand(hidden_cards: is_player_turn ? 1 : 0)
     puts "Value: #{is_player_turn ? 'HIDDEN' : dealer.total}"
@@ -182,23 +182,38 @@ class Game
 
   def player_hit
     deck.deal_to(player)
-    puts "You chose to hit.\nYou drew the #{player.cards.last}\n\n"
+    puts "You chose to hit.\nYou drew the #{player.cards.last}\n"
   end
 
   def player_turn
+    puts "#{player.name}'s turn..."
     loop do
       break if player_choice == "s"
 
       player_hit
-      return if player.busted?
+      if player.busted?
+        puts "You busted!"
+        return
+      end
+
       show_cards
     end
     puts "You chose to stay."
   end
 
   def dealer_turn
-    puts
-    while !dealer.busted? && dealer.total < 17
+    puts "\nDealer's turn..."
+    loop do
+      if dealer.total >= 17
+        puts "Dealer stays!"
+        break
+      end
+
+      if dealer.busted?
+        puts "#{dealer.name} busted!"
+        break
+      end
+
       deck.deal_to(dealer)
       puts "#{dealer.name} drew the #{dealer.cards.last}"
     end
@@ -214,7 +229,6 @@ class Game
     players = [player, dealer].sort_by(&:total)
     winner = players.last
     if players.any?(&:busted?)
-      puts "#{players.last.name} busted!"
       winner = players.first
     elsif player.total == dealer.total
       puts "It's a tie!"
