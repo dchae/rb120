@@ -27,12 +27,12 @@ class Player
   def display_hand(hidden_cards: 0)
     hand =
       cards
-        .size
-        .times
-        .map do |i|
-          i < (cards.size - hidden_cards) ? cards[i].to_s : "[HIDDEN CARD]"
-        end
-        .join(", ")
+      .size
+      .times
+      .map do |i|
+        i < (cards.size - hidden_cards) ? cards[i].to_s : "[HIDDEN CARD]"
+      end
+      .join(", ")
     puts hand
   end
 end
@@ -73,7 +73,10 @@ class Card
   attr_reader :rank, :suit
 
   def initialize(ord)
-    raise(ArgumentError, "expected card number within range (0..52)") if !(0..52).include?(ord)
+    if !(0..52).include?(ord)
+      raise(ArgumentError,
+            "expected card number within range (0..52)")
+    end
     @rank = ord % 13 + 1
     @suit = ord / 13 + 1
     @value = value + 1
@@ -104,6 +107,13 @@ class Game
   def start
     clear_screen
     greet_player
+    game_loop
+    goodbye_message
+  end
+
+  private
+
+  def game_loop
     loop do
       initial_deal
       show_cards
@@ -114,10 +124,7 @@ class Game
       reset_game
       play_again_message
     end
-    goodbye_message
   end
-
-  private
 
   def clear_screen
     system "clear"
@@ -133,7 +140,7 @@ class Game
   end
 
   def play_again_message
-    puts "You chose to play again!"
+    puts "You chose to play again!\n\n"
   end
 
   def player_name
@@ -156,7 +163,7 @@ class Game
   def show_cards(player_turn: true)
     puts "#{dealer.name}'s hand: "
     dealer.display_hand(hidden_cards: player_turn ? 1 : 0)
-    puts "Value: #{player_turn ? "HIDDEN" : dealer.total}"
+    puts "Value: #{player_turn ? 'HIDDEN' : dealer.total}"
     puts "#{player.name}'s hand: "
     player.display_hand
     puts "Value: #{player.total}\n\n"
@@ -213,7 +220,7 @@ class Game
     end
     puts "#{winner.name} wins!"
   end
-  
+
   def validate_choice
     # to implement
   end
@@ -231,7 +238,7 @@ class Game
 
   def reset_game
     deck.reset_cards
-    [player, dealer].each { |x| x.reset_cards }
+    [player, dealer].each(&:reset_cards)
     clear_screen
   end
 end
