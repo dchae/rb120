@@ -51,7 +51,7 @@ class Deck
   end
 
   def reset_cards
-    @cards = 52.times.map { |ord| Card.new(ord) }.flatten
+    @cards = Card::NUMBERS.map { |x| Card.new(x) }.flatten
   end
 
   def draw_card
@@ -68,12 +68,13 @@ class Deck
 end
 
 class Card
+  NUMBERS = (0..52)
   SUITS = %w[Clubs Diamonds Hearts Spades]
   RANKS = %w[Ace Two Three Four Five Six Seven Eight Nine Ten Jack Queen King]
   attr_reader :rank, :suit
 
   def initialize(ord)
-    if !(0..52).include?(ord)
+    if !NUMBERS.include?(ord)
       raise(ArgumentError,
             "expected card number within range (0..52)")
     end
