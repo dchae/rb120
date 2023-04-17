@@ -187,10 +187,9 @@ class Game
 
   def player_turn
     puts "#{player.name}'s turn..."
-    loop do
-      break if player_choice == "s"
-
+    while player_choice != "s"
       player_hit
+
       if player.busted?
         puts "You busted!"
         return
@@ -203,15 +202,15 @@ class Game
 
   def dealer_turn
     puts "\nDealer's turn..."
-    loop do
-      if dealer.total >= 17
-        puts "Dealer stays!"
-        break
-      end
+    dealer_loop
+    puts "Dealer stays!"
+  end
 
+  def dealer_loop
+    while dealer.total < 17
       if dealer.busted?
         puts "#{dealer.name} busted!"
-        break
+        return
       end
 
       deck.deal_to(dealer)
