@@ -17,13 +17,14 @@ class Minilang
   attr_reader :operations
 
   def initialize(program)
-    @operations = program.split
-    @stack = []
-    @register = 0
+    @program = program
     create_methods(MATH_OPERATORS)
   end
 
-  def eval
+  def eval(*args)
+    @stack = []
+    @register = 0
+    @operations = format(program, *args).split
     operations.each { |op| eval_op(op) }
   rescue MinilangProgramError => e
     puts e.message
@@ -31,7 +32,7 @@ class Minilang
 
   private
 
-  attr_accessor :stack, :register
+  attr_accessor :program, :stack, :register
 
   def eval_op(op)
     if op =~ /\d/
@@ -102,3 +103,19 @@ Minilang.new("-3 PUSH 5 SUB PRINT").eval
 
 Minilang.new("6 PUSH").eval
 # (nothing printed; no PRINT commands)
+
+CENTIGRADE_TO_FAHRENHEIT =
+  "5 PUSH %<degrees_c>d PUSH 9 MULT DIV PUSH 32 ADD PRINT"
+minilang = Minilang.new(CENTIGRADE_TO_FAHRENHEIT)
+minilang.eval(degrees_c: 100)
+# 212
+minilang.eval(degrees_c: 0)
+# 32
+minilang.eval(degrees_c: -40)
+# -40
+
+AREA_OF_RECTANGLE = "%<side_1>d PUSH %<side_2>d MULT PRINT"
+minilang = Minilang.new(AREA_OF_RECTANGLE)
+minilang.eval(side_1: 4, side_2: 3)
+minilang.eval(side_1: 0, side_2: 9)
+minilang.eval(side_1: 7, side_2: 5)
