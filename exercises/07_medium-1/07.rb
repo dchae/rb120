@@ -1,11 +1,11 @@
 class GuessingGame
   def initialize(low = 1, high = 100)
     @answer_range = (low..high)
-    @initial_attempts = Math.log2(answer_range.size).to_i + 1
+    @initial_attempts = Math.log2(high - low + 1).to_i + 1
   end
 
   def play
-    init
+    init_game
     main_loop
     display_result
   end
@@ -15,7 +15,7 @@ class GuessingGame
   attr_reader :answer_range, :initial_attempts
   attr_accessor :guesses_remaining, :guess, :answer
 
-  def init
+  def init_game
     self.guesses_remaining = initial_attempts
     self.answer = rand(answer_range)
     self.guess = nil
