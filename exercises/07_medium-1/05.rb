@@ -49,12 +49,17 @@ class Minilang
   end
 
   def pop
-    raise EmptyStackError if stack.empty?
-    self.register = stack.pop
+    self.register = stack_pop
   end
 
   def print
     puts register
+  end
+
+  # separated pop from stack from miniland operation "POP"
+  def stack_pop
+    raise EmptyStackError if stack.empty?
+    stack.pop
   end
 
   def create_methods(hash)
@@ -63,7 +68,7 @@ class Minilang
       self
         .class
         .define_method(name) do
-          self.register = self.register.send(op, self.pop)
+          self.register = self.register.send(op, self.stack_pop)
         end
     end
     # make these methods private
@@ -71,51 +76,40 @@ class Minilang
   end
 end
 
-Minilang.new("PRINT").eval
-# 0
+Minilang.new("PRINT").eval # => 0
 
-Minilang.new("5 PUSH 3 MULT PRINT").eval
-# 15
+Minilang.new("5 PUSH 3 MULT PRINT").eval # => 15
 
 Minilang.new("5 PRINT PUSH 3 PRINT ADD PRINT").eval
-# 5
-# 3
-# 8
+# => 5
+# => 3
+# => 8
 
 Minilang.new("5 PUSH 10 PRINT POP PRINT").eval
-# 10
-# 5
+# => 10
+# => 5
 
-Minilang.new("5 PUSH POP POP PRINT").eval
-# Empty stack!
+Minilang.new("5 PUSH POP POP PRINT").eval # => Empty stack!
 
-Minilang.new("3 PUSH PUSH 7 DIV MULT PRINT ").eval
-# 6
+Minilang.new("3 PUSH PUSH 7 DIV MULT PRINT ").eval # => 6
 
-Minilang.new("4 PUSH PUSH 7 MOD MULT PRINT ").eval
-# 12
+Minilang.new("4 PUSH PUSH 7 MOD MULT PRINT ").eval # => 12
 
-Minilang.new("-3 PUSH 5 XSUB PRINT").eval
-# Invalid token: XSUB
+Minilang.new("-3 PUSH 5 XSUB PRINT").eval # => Invalid token: XSUB
 
-Minilang.new("-3 PUSH 5 SUB PRINT").eval
-# 8
+Minilang.new("-3 PUSH 5 SUB PRINT").eval # => 8
 
-Minilang.new("6 PUSH").eval
-# (nothing printed; no PRINT commands)
+Minilang.new("6 PUSH").eval # => (nothing printed; no PRINT commands)
 
 CENTIGRADE_TO_FAHRENHEIT =
   "5 PUSH %<degrees_c>d PUSH 9 MULT DIV PUSH 32 ADD PRINT"
 minilang = Minilang.new(CENTIGRADE_TO_FAHRENHEIT)
-minilang.eval(degrees_c: 100)
-# 212
-minilang.eval(degrees_c: 0)
-# 32
-minilang.eval(degrees_c: -40)
-# -40
+minilang.eval(degrees_c: 100) # => 212
+minilang.eval(degrees_c: 0)   # => 32
+minilang.eval(degrees_c: -40) # => -40
 
-AREA_OF_RECTANGLE = "%<side_1>d PUSH %<side_2>d MULT PRINT"
+AREA_OF_RECTANGLE = "%<width>d PUSH %<length>d MULT PRINT"
 minilang = Minilang.new(AREA_OF_RECTANGLE)
-minilang.eval(side_1: 4, side_2: 3)
-minilang.eval(side_1: 0, side_2: 9)
-minilang.eval(side_1: 7, side_2: 5)
+minilang.eval(width: 4, length: 3) # => 12
+minilang.eval(width: 0, length: 9) # => 0
+minilang.eval(width: 7, length: 5) # => 35
