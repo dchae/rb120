@@ -112,8 +112,12 @@ class PokerHand
     straight? && flush?
   end
 
+  def n_of_a_kind?(n)
+    rank_tally.any? { |k, v| v > n - 1}
+  end
+
   def four_of_a_kind?
-    rank_tally.any? { |k, v| v > 3 }
+    n_of_a_kind?(4)
   end
 
   def full_house?
@@ -130,7 +134,7 @@ class PokerHand
   end
 
   def three_of_a_kind?
-    rank_tally.any? { |k, v| v > 2 }
+    n_of_a_kind?(3)
   end
 
   def two_pair?
@@ -138,7 +142,7 @@ class PokerHand
   end
 
   def pair?
-    rank_tally.any? { |k, v| v > 1 }
+    n_of_a_kind?(2)
   end
 end
 
