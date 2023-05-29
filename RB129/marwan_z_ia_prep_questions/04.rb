@@ -8,8 +8,7 @@ class Student
     self.id == other.id
   end
 
-  # private
-  protected
+  private
   
   attr_reader :id, :name
 end
